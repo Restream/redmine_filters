@@ -3,7 +3,7 @@ class CreateIssueVisits < ActiveRecord::Migration
     create_table :issue_visits do |t|
       t.references :issue, :null => false
       t.references :user, :null => false
-      t.datetime :last_visit
+      t.datetime :last_visit_on
       t.integer :visit_count, :null => false, :default => 0
       t.timestamps
     end

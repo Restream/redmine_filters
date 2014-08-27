@@ -19,41 +19,41 @@ class RedmineFilters::QueryTest < ActiveSupport::TestCase
     @issues_count = IssueQuery.new(:name => '_').issue_count
   end
 
-  def test_last_viewed_by_me_on_some_date
+  def test_last_visit_on_some_date
     IssueVisit.save_visit(@issue, @user)
     query = IssueQuery.new(:name => '_', :group_by => 'status')
-    query.add_filter('last_viewed_by_me_on', '=', [@some_date.to_s])
-    assert query.has_filter?('last_viewed_by_me_on')
+    query.add_filter('last_visit_on', '=', [@some_date.to_s])
+    assert query.has_filter?('last_visit_on')
     assert_equal 1, query.issue_count
     assert_equal({ @issue.status => 1 }, query.issue_count_by_group)
     assert_equal 1, query.issues.length
     assert_equal [@issue.id], query.issue_ids
   end
 
-  def test_last_viewed_by_me_on_none
+  def test_last_visit_on_none
     IssueVisit.save_visit(@issue, @user)
     query = IssueQuery.new(:name => '_', :group_by => 'status')
-    query.add_filter('last_viewed_by_me_on', '!*')
-    assert query.has_filter?('last_viewed_by_me_on')
+    query.add_filter('last_visit_on', '!*')
+    assert query.has_filter?('last_visit_on')
     assert query.issues.many?
     refute query.issue_ids.include? @issue.id
   end
 
-  def test_viewed_by_me_times
+  def test_visit_count
     @issue = Issue.find(2)
     5.times { IssueVisit.save_visit(@issue, @user) }
     query = IssueQuery.new(:name => '_')
-    query.add_filter('viewed_by_me_times', '=', ['5'])
-    assert query.has_filter?('viewed_by_me_times')
+    query.add_filter('visit_count', '=', ['5'])
+    assert query.has_filter?('visit_count')
     assert_equal 1, query.issue_count
     assert_equal [@issue.id], query.issue_ids
   end
 
-  def test_not_viewed_by_me_times
+  def test_not_visit_count
     IssueVisit.save_visit(@issue, @user)
     query = IssueQuery.new(:name => '_')
-    query.add_filter('viewed_by_me_times', '!*')
-    assert query.has_filter?('viewed_by_me_times')
+    query.add_filter('visit_count', '!*')
+    assert query.has_filter?('visit_count')
     assert_equal @issues_count - 1, query.issue_count
     refute query.issue_ids.include?(@issue.id)
   end
@@ -211,5 +211,10 @@ class RedmineFilters::QueryTest < ActiveSupport::TestCase
   def test_issue_query_has_visit_count_column
     query = IssueQuery.new
     assert query.available_columns.detect { |c| c.name == :visit_count }
+  end
+
+  def test_issue_query_has_last_visit_on_column
+    query = IssueQuery.new
+    assert query.available_columns.detect { |c| c.name == :last_visit_on }
   end
 end

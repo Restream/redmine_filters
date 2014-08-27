@@ -16,7 +16,7 @@ class IssueVisit < ActiveRecord::Base
 
     def save_visit(issue, user = User.current)
       visit = find_or_initialize_by_issue(issue, user)
-      visit.last_visit = Time.now
+      visit.last_visit_on = Time.now
       visit.visit_count ||= 0
       visit.visit_count +=1
       visit.save

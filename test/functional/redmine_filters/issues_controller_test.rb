@@ -42,6 +42,6 @@ class RedmineCustomize::IssuesControllerTest < ActionController::TestCase
     after_last_visit = Time.now
     visit = IssueVisit.find_by_issue(issue, @user)
     assert visit
-    assert visit.last_visit.between?(after_first_visit, after_last_visit)
+    assert visit.last_visit_on.between?(after_first_visit, after_last_visit)
   end
 end
