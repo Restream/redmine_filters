@@ -207,4 +207,9 @@ class RedmineFilters::QueryTest < ActiveSupport::TestCase
     assert query.has_filter?('updated_after_i_was_assignee_on')
     assert_equal 0, query.issue_count
   end
+
+  def test_issue_query_has_visit_count_column
+    query = IssueQuery.new
+    assert query.available_columns.detect { |c| c.name == :visit_count }
+  end
 end
