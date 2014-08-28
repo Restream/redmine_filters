@@ -1,6 +1,4 @@
 class IssueVisit < ActiveRecord::Base
-  # unloadable
-
   belongs_to :issue
   belongs_to :user
 
@@ -18,7 +16,7 @@ class IssueVisit < ActiveRecord::Base
       visit = find_or_initialize_by_issue(issue, user)
       visit.last_visit_on = Time.now
       visit.visit_count ||= 0
-      visit.visit_count +=1
+      visit.visit_count += 1
       visit.save
     end
   end
