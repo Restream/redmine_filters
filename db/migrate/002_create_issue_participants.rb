@@ -3,7 +3,7 @@ class CreateIssueParticipants < ActiveRecord::Migration
     create_table :issue_participants do |t|
       t.references :issue, :null => false
       t.references :user
-      t.integer :participant_role
+      t.integer :participant_role, :null => false, :default => 0
       t.datetime :date_begin
       t.datetime :date_end
     end
