@@ -25,23 +25,9 @@ class RedmineFilters::Services::ParticipantServiceTest < ActiveSupport::TestCase
     user = User.find(1)
     issue = Issue.find(1)
 
-    sleep 1
-    issue.init_journal(user, 'update 1')
-    issue.assigned_to_id = 2
-    issue.save
-    update_1_on = issue.updated_on.to_s
-
-    sleep 1
-    issue.init_journal(user, 'update 2')
-    issue.assigned_to_id = nil
-    issue.save
-    update_2_on = issue.updated_on.to_s
-
-    sleep 1
-    issue.init_journal(user, 'update 3')
-    issue.assigned_to_id = 3
-    issue.save
-    update_3_on = issue.updated_on.to_s
+    update_1_on = change_assignee(2)
+    update_2_on = change_assignee(nil)
+    update_3_on = change_assignee(3)
 
     RedmineFilters::Services::ParticipantService.update_assignees
 
@@ -63,6 +49,15 @@ class RedmineFilters::Services::ParticipantServiceTest < ActiveSupport::TestCase
     assert_equal 3, participants[3].user_id
     assert_equal update_3_on, participants[3].date_begin.to_s
     assert_equal nil, participants[3].date_end
+  end
+
+  def change_assignee(assigned_to_id)
+    sleep 2
+    issue = Issue.find(1)
+    issue.init_journal(User.current, 'update 2')
+    issue.assigned_to_id = assigned_to_id
+    issue.save!
+    issue.updated_on.to_s
   end
 
 
