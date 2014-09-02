@@ -1,10 +1,10 @@
 module RedmineFilters::Services
   class ParticipantService
     class << self
-      def update_from_journal(&block)
-        IssueParticipant.delete_all
-        update_1
-        update_2(&block)
+      def update_assignees(&block)
+        IssueParticipant.delete_all(:participant_role => IssueParticipant::ASSIGNEE)
+        update_assignees_by_issue(&block)
+        update_assignees_by_journal(&block)
       end
 
       def estimated_ticks
@@ -19,12 +19,12 @@ module RedmineFilters::Services
 
       private
 
-      def update_1
+      def update_assignees_by_issue(&block)
         # User was assigned when issue created and was not changed later
         # (find issues without assignee change)
         IssueParticipant.connection.execute <<-SQL
           INSERT INTO issue_participants (issue_id, user_id, participant_role, date_begin)
-          SELECT issues.id, issues.assigned_to_id, 0, issues.created_on
+          SELECT issues.id, issues.assigned_to_id, #{IssueParticipant::ASSIGNEE}, issues.created_on
           FROM issues
           WHERE
             NOT EXISTS (
@@ -40,7 +40,7 @@ module RedmineFilters::Services
         SQL
       end
 
-      def update_2(&block)
+      def update_assignees_by_journal(&block)
         issues = {}
         JournalDetail\
           .select('journal_details.id, issues.id as issue_id, issues.created_on, journals.created_on as updated_on, journal_details.old_value, journal_details.value')\
@@ -58,6 +58,7 @@ module RedmineFilters::Services
             issue << {
                 :issue_id => detail.issue_id,
                 :user_id => detail.old_value && detail.old_value.to_i,
+                :participant_role => IssueParticipant::ASSIGNEE,
                 :date_begin => detail.created_on,
                 :date_end => detail.updated_on
             }
@@ -66,6 +67,7 @@ module RedmineFilters::Services
             issue << {
                 :issue_id => detail.issue_id,
                 :user_id => detail.value && detail.value.to_i,
+                :participant_role => IssueParticipant::ASSIGNEE,
                 :date_begin => detail.updated_on,
                 :date_end => nil
             }
@@ -80,6 +82,7 @@ module RedmineFilters::Services
             issue << {
                 :issue_id => detail.issue_id,
                 :user_id => detail.value && detail.value.to_i,
+                :participant_role => IssueParticipant::ASSIGNEE,
                 :date_begin => detail.updated_on,
                 :date_end => nil
             }

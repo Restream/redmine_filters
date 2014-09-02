@@ -3,7 +3,7 @@ require File.expand_path('../../../test_helper', __FILE__)
 class RedmineFilters::IssuesControllerTest < ActionController::TestCase
   fixtures :users, :user_preferences, :roles, :projects, :members, :member_roles,
            :issues, :issue_statuses, :trackers, :enumerations, :custom_fields,
-           :auth_sources, :projects_trackers, :enabled_modules
+           :auth_sources, :projects_trackers, :enabled_modules, :journals, :journal_details
 
   def setup
     @controller = IssuesController.new
@@ -88,7 +88,7 @@ class RedmineFilters::IssuesControllerTest < ActionController::TestCase
 
   def test_participant_created_on_issue_update
     # fill up participants before update
-    RedmineFilters::Services::ParticipantService.update_from_journal
+    RedmineFilters::Services::ParticipantService.update_assignees
 
     put :update, :id => 1, :issue => {:subject => 'changed', :assigned_to_id => 2}
     issue = Issue.find(1)

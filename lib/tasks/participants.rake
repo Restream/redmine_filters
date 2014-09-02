@@ -7,7 +7,7 @@ namespace :redmine_filters do
     ticks = RedmineFilters::Services::ParticipantService.estimated_ticks
     bar = ANSI::ProgressBar.new('Progress', ticks)
     bar.flush
-    RedmineFilters::Services::ParticipantService.update_from_journal do |ticks|
+    RedmineFilters::Services::ParticipantService.update_assignees do |ticks|
       bar.inc(ticks)
     end
     bar.finish

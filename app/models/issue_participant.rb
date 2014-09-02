@@ -5,6 +5,8 @@ class IssueParticipant < ActiveRecord::Base
   belongs_to :issue
   belongs_to :user
 
+  scope :assignees, lambda { where(:participant_role => ASSIGNEE).order(:date_begin) }
+
   class << self
     def import!(record_list, batch_size = 500, &block)
       raise ArgumentError 'record_list not an Array of Hashes' unless record_list.is_a?(Array) &&

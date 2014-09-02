@@ -3,6 +3,8 @@ module RedmineFilters::Patches
     extend ActiveSupport::Concern
 
     included do
+      has_many :participants, :class_name => 'IssueParticipant'
+
       has_one :visit,
               :class_name => 'IssueVisit',
               :conditions => proc { "#{IssueVisit.table_name}.user_id = #{User.current.id}" }
