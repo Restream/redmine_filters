@@ -21,6 +21,9 @@ module RedmineFilters::Patches
       # Filters based on issue_visit
       add_available_filter 'visit_count', :type => :integer
       add_available_filter 'last_visit_on', :type => :date_past
+
+      # Filters based on issue_participant
+      add_available_filter 'assigned_to_me_on', :type => :date_past
     end
 
     def sql_for_visit_count_field(field, operator, value)
@@ -30,6 +33,34 @@ module RedmineFilters::Patches
     def sql_for_last_visit_on_field(field, operator, value)
       sql_for_field(field, operator, value, IssueVisit.table_name, field)
     end
+
+
+    def sql_for_assigned_to_me_on_field(field, operator, value)
+      part_t = IssueParticipant.table_name
+      issue_t = Issue.table_name
+      if value == '!*'
+        <<-SQL
+          NOT EXISTS (
+            SELECT * FROM #{part_t}
+            WHERE
+              #{part_t}.issue_id = #{issue_t}.id AND
+              #{part_t}.user_id = #{User.current.id}
+          )
+        SQL
+      else
+        sql_on_time = sql_for_field(field, operator, value, part_t, 'date_begin')
+        <<-SQL
+          EXISTS (
+            SELECT * FROM #{part_t}
+            WHERE
+              #{part_t}.issue_id = #{issue_t}.id AND
+              #{part_t}.user_id = #{User.current.id} AND
+              (#{sql_on_time})
+          )
+        SQL
+      end
+    end
+
   end
 end
 
