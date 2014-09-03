@@ -15,6 +15,7 @@ module RedmineFilters::Patches
         includes(:project, :visit).where(Issue.visible_condition(args.shift || User.current, *args))
       }
 
+      after_commit :insert_assignee_into_participants, :on => :create
     end
 
     def author_with_participants
@@ -27,6 +28,15 @@ module RedmineFilters::Patches
 
     def updaters
       journals.map(&:user).uniq
+    end
+
+    def insert_assignee_into_participants
+      IssueParticipant.create(
+          :issue => self,
+          :user => assigned_to,
+          :participant_role => IssueParticipant::ASSIGNEE,
+          :date_begin => created_on
+      )
     end
   end
 end

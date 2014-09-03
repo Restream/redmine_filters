@@ -58,7 +58,7 @@ class RedmineFilters::IssuesControllerTest < ActionController::TestCase
                     :estimated_hours => ''}
 
     issue = Issue.find_by_subject('This is the test_new issue with assignee')
-    participants = IssueParticipant.where(:issue_id => issue.id)
+    participants = issue.participants
     assert_equal 1, participants.count
     participant = participants[0]
     assert_equal 3, participant.user_id
@@ -78,7 +78,7 @@ class RedmineFilters::IssuesControllerTest < ActionController::TestCase
                     :estimated_hours => ''}
 
     issue = Issue.find_by_subject('This is the test_new issue without assignee')
-    participants = IssueParticipant.where(:issue_id => issue.id)
+    participants = issue.participants
     assert_equal 1, participants.count
     participant = participants[0]
     assert_equal nil, participant.user_id
@@ -92,7 +92,7 @@ class RedmineFilters::IssuesControllerTest < ActionController::TestCase
 
     put :update, :id => 1, :issue => {:subject => 'changed', :assigned_to_id => 2}
     issue = Issue.find(1)
-    participants = IssueParticipant.where(:issue_id => issue.id).order(:date_begin)
+    participants = issue.participants.order(:date_begin)
     assert_equal 2, participants.count
     prev_participant = participants[0]
     last_participant = participants[1]
