@@ -16,6 +16,18 @@ module RedmineFilters::Patches
       }
 
     end
+
+    def author_with_participants
+      ([author] + participants.map(&:user).to_a).uniq.compact
+    end
+
+    def author_with_updaters
+      ([author] + updaters.to_a).uniq
+    end
+
+    def updaters
+      journals.map(&:user).uniq
+    end
   end
 end
 

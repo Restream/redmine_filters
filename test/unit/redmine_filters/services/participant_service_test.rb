@@ -22,7 +22,6 @@ class RedmineFilters::Services::ParticipantServiceTest < ActiveSupport::TestCase
 
   def test_update_assignees
     Issue.delete_all('id != 1')
-    user = User.find(1)
     issue = Issue.find(1)
 
     update_1_on = change_assignee(2)

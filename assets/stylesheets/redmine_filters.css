@@ -1,0 +1,10 @@
+ul.updaters, ul.participants {
+  margin: 0;
+  padding: 0;
+}
+
+.updaters li, .participants li {
+  list-style-type: none;
+  margin: 0px 2px 0px 0px;
+  padding: 0px 0px 0px 0px;
+}

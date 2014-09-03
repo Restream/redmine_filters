@@ -102,4 +102,21 @@ class RedmineFilters::IssuesControllerTest < ActionController::TestCase
     assert_equal issue.updated_on, last_participant.date_begin
     assert_equal nil, last_participant.date_end
   end
+
+  def test_participant_block_showed_in_sidebar
+    updater = User.find(1)
+    issue = Issue.find(1)
+    issue.init_journal(updater, 'some update')
+    issue.assigned_to_id = 3
+    issue.save
+
+    RedmineFilters::Services::ParticipantService.update_assignees
+
+    get :show, :id => issue.id
+
+    assert_select 'div#sidebar ul.participants li a[href=/users/2]', {}, 'participants should include author'
+    assert_select 'div#sidebar ul.participants li a[href=/users/3]', {}, 'participants should include assignee'
+    assert_select 'div#sidebar ul.updaters li a[href=/users/2]', {}, 'updaters should include author'
+    assert_select 'div#sidebar ul.updaters li a[href=/users/1]', {}, 'updaters should include all updaters'
+  end
 end
