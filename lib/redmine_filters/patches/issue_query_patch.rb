@@ -5,11 +5,11 @@ module RedmineFilters::Patches
     included do
       self.available_columns << QueryColumn.new(
           :visit_count,
-          :sortable => "#{IssueVisit.table_name}.visit_count",
+          :sortable => "COALESCE(#{IssueVisit.table_name}.visit_count, 0)",
           :default_order => 'desc')
       self.available_columns << QueryColumn.new(
           :last_visit_on,
-          :sortable => "#{IssueVisit.table_name}.last_visit_on",
+          :sortable => "COALESCE(#{IssueVisit.table_name}.last_visit_on, date('1900-01-01'))",
           :default_order => 'desc')
 
       alias_method_chain :initialize_available_filters, :rfs_patch
