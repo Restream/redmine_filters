@@ -183,30 +183,35 @@ class RedmineFilters::QueryTest < ActiveSupport::TestCase
   end
 
   def test_updated_after_i_was_assignee_on
-    @issue.init_journal(@user, 'assign user')
-    @issue.assigned_to = @user
-    @issue.save
-    @issue.init_journal(@user, 'unassign user')
-    @issue.subject = 'new subject'
-    @issue.save
+    update_after_i_was_assignee
     query = IssueQuery.new(:name => '_')
     query.add_filter('updated_after_i_was_assignee_on', 't')
     assert query.has_filter?('updated_after_i_was_assignee_on')
     assert_equal 1, query.issue_count
-    assert_equal [@issue.id], query.issue_ids
+    assert_equal [1], query.issue_ids
   end
 
   def test_updated_after_i_was_assignee_on_none_should_be_empty
-    @issue.init_journal(@user, 'assign user')
-    @issue.assigned_to = @user
-    @issue.save
-    @issue.init_journal(@user, 'unassign user')
-    @issue.subject = 'new subject'
-    @issue.save
+    update_after_i_was_assignee
     query = IssueQuery.new(:name => '_')
     query.add_filter('updated_after_i_was_assignee_on', '!*')
     assert query.has_filter?('updated_after_i_was_assignee_on')
     assert_equal 0, query.issue_count
+  end
+
+  def update_after_i_was_assignee
+    issue = Issue.find(1)
+    issue.init_journal(@user, 'assign user')
+    issue.assigned_to = @user
+    issue.save
+    issue = Issue.find(1)
+    issue.init_journal(@user, 'unassign user')
+    issue.assigned_to = nil
+    issue.save
+    issue = Issue.find(1)
+    issue.init_journal(@user, 'update')
+    issue.subject = 'new subject'
+    issue.save
   end
 
   def test_issue_query_has_visit_count_column
