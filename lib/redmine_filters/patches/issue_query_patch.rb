@@ -24,6 +24,9 @@ module RedmineFilters::Patches
 
       # Filters based on issue_participant
       add_available_filter 'assigned_to_me_on', :type => :date_past
+
+      # Additional filters based on existing data
+      add_available_filter 'created_by_me_on', :type => :date_past
     end
 
     def sql_for_visit_count_field(field, operator, value)
@@ -34,16 +37,14 @@ module RedmineFilters::Patches
       sql_for_field(field, operator, value, IssueVisit.table_name, field)
     end
 
-
     def sql_for_assigned_to_me_on_field(field, operator, value)
       part_t = IssueParticipant.table_name
-      issue_t = Issue.table_name
       if value == '!*'
         <<-SQL
           NOT EXISTS (
             SELECT * FROM #{part_t}
             WHERE
-              #{part_t}.issue_id = #{issue_t}.id AND
+              #{part_t}.issue_id = #{queried_table_name}.id AND
               #{part_t}.user_id = #{User.current.id}
           )
         SQL
@@ -53,7 +54,7 @@ module RedmineFilters::Patches
           EXISTS (
             SELECT * FROM #{part_t}
             WHERE
-              #{part_t}.issue_id = #{issue_t}.id AND
+              #{part_t}.issue_id = #{queried_table_name}.id AND
               #{part_t}.user_id = #{User.current.id} AND
               (#{sql_on_time})
           )
@@ -61,6 +62,15 @@ module RedmineFilters::Patches
       end
     end
 
+    def sql_for_created_by_me_on_field(field, operator, value)
+      [
+          '(',
+          sql_for_field('created_on', operator, value, queried_table_name, 'created_on'),
+          ' AND ',
+          sql_for_field('author_id', '=', [User.current.id.to_s], queried_table_name, 'author_id'),
+          ')'
+      ].join
+    end
   end
 end
 
