@@ -17,6 +17,7 @@ class RedmineFilters::QueryTest < ActiveSupport::TestCase
     @issue = Issue.find(1)
     @some_date = Date.today
     @issues_count = IssueQuery.new(:name => '_').issue_count
+    RedmineFilters::Services::ParticipantService.update_assignees
   end
 
   def test_last_visit_on_some_date
