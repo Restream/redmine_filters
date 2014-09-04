@@ -18,6 +18,11 @@ module RedmineFilters::Patches
     def initialize_available_filters_with_rfs_patch
       initialize_available_filters_without_rfs_patch
 
+      principals = available_principals
+      principal_values = []
+      principal_values << ["<< #{l(:label_me)} >>", 'me'] if User.current.logged?
+      principal_values += principals.collect{ |s| [s.name, s.id.to_s] }
+
       # Filters based on issue_visit
       add_available_filter 'visit_count', :type => :integer
       add_available_filter 'last_visit_on', :type => :date_past
@@ -28,20 +33,14 @@ module RedmineFilters::Patches
       add_available_filter 'updated_after_i_was_assignee_on', :type => :date_past
       add_available_filter 'updated_when_i_was_assignee_on', :type => :date_past
 
-      principals = available_principals
-      users = principals.select { |p| p.is_a?(User) }
-
-      assigned_to_values = []
-      assigned_to_values << ["<< #{l(:label_me)} >>", 'me'] if User.current.logged?
-      assigned_to_values += (Setting.issue_group_assignment? ? principals : users).collect{ |s| [s.name, s.id.to_s] }
-
-      add_available_filter(
-          'updated_by', :type => :list_optional, :values => assigned_to_values
-      ) unless assigned_to_values.empty?
-
       # Additional filters based on existing data
       add_available_filter 'created_by_me_on', :type => :date_past
       add_available_filter 'updated_by_me_on', :type => :date_past
+
+      if principal_values.any?
+        add_available_filter 'updated_by', :type => :list_optional, :values => principal_values
+        add_available_filter 'participant', :type => :list_optional, :values => principal_values
+      end
     end
 
     def available_principals
@@ -219,10 +218,8 @@ module RedmineFilters::Patches
     end
 
     def sql_for_updated_by_field(field, operator, value)
-      value.push(User.current.logged? ? User.current.id.to_s : '0') if value.delete('me')
-      Group.all.each do |group|
-        value += group.users.map { |u| u.id.to_s } if value.delete(group.id.to_s)
-      end
+      replace_keyword_me_with_current_user_id(value)
+      value = replace_group_id_with_user_ids(value)
       journal_t = Journal.table_name
       sql_user_id = sql_for_field(field, operator, value, journal_t, 'user_id')
       <<-SQL
@@ -233,6 +230,29 @@ module RedmineFilters::Patches
             #{journal_t}.journalized_id = #{Issue.table_name}.id AND
             (#{sql_user_id}))
       SQL
+    end
+
+    def sql_for_participant_field(field, operator, value)
+      replace_keyword_me_with_current_user_id(value)
+      value = replace_group_id_with_user_ids(value)
+      part_t = IssueParticipant.table_name
+      sql_user_id = sql_for_field(field, operator, value, part_t, 'user_id')
+      <<-SQL
+        EXISTS (
+          SELECT * FROM #{part_t}
+          WHERE #{part_t}.issue_id = #{queried_table_name}.id AND (#{sql_user_id}))
+      SQL
+    end
+
+    def replace_group_id_with_user_ids(value)
+      Group.all.each do |group|
+        value += group.users.map { |u| u.id.to_s } if value.delete(group.id.to_s)
+      end
+      value
+    end
+
+    def replace_keyword_me_with_current_user_id(value)
+      value.push(User.current.logged? ? User.current.id.to_s : '0') if value.delete('me')
     end
   end
 end

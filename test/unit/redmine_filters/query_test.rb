@@ -266,4 +266,19 @@ class RedmineFilters::QueryTest < ActiveSupport::TestCase
     assert query.has_filter?('updated_by')
     assert_equal [1, 6], query.issue_ids.sort
   end
+
+  def test_participant_user_3
+    query = IssueQuery.new(:name => '_')
+    query.add_filter('participant', '=', ['3'])
+    assert query.has_filter?('participant')
+    assert_equal [2, 3], query.issue_ids.sort
+  end
+
+  def test_participant_user_me
+    User.current = User.find(2)
+    query = IssueQuery.new(:name => '_')
+    query.add_filter('participant', '=', ['2'])
+    assert query.has_filter?('participant')
+    assert_equal [4], query.issue_ids.sort
+  end
 end
