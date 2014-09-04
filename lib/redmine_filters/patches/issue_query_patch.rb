@@ -72,7 +72,8 @@ module RedmineFilters::Patches
       else
         sql_on_time = sql_for_field(field, operator, value, journal_t, 'created_on')
         <<-SQL
-          #{queried_table_name}.assigned_to_id != #{User.current.id} AND
+          (#{queried_table_name}.assigned_to_id IS NULL OR
+           #{queried_table_name}.assigned_to_id != #{User.current.id}) AND
           EXISTS (
             SELECT * FROM #{part_t}
             WHERE
@@ -85,7 +86,15 @@ module RedmineFilters::Patches
             WHERE
               #{journal_t}.journalized_type = 'Issue' AND
               #{journal_t}.journalized_id = #{queried_table_name}.id AND
-              #{sql_on_time}
+              #{journal_t}.created_on > (
+                SELECT MAX(#{part_t}.date_end)
+                FROM #{part_t}
+                WHERE
+                  #{part_t}.issue_id = #{queried_table_name}.id AND
+                  #{part_t}.user_id = #{User.current.id} AND
+                  #{part_t}.date_end IS NOT NULL
+              ) AND
+              (#{sql_on_time})
           )
         SQL
       end
