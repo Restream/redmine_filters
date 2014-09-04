@@ -1,3 +1,17 @@
 ru:
+  label_participants: Участники
+  label_updaters: Комментаторы
+
   field_visit_count: Посещений
   field_last_visit_on: Последнее посещение
+
+  field_assigned_to_me_on: Назначена мне
+  field_unassigned_from_me_on: Сняли назначение с меня
+  field_updated_after_i_was_assignee_on: Изменена после снятия назначения
+  field_updated_when_i_was_assignee_on: Изменена когда я был назначен
+
+  field_created_by_me_on: Создана мной
+  field_updated_by_me_on: Изменена мной
+
+  field_updated_by: Комментатор (все)
+  field_participant: Участник (автор + все назначеные)

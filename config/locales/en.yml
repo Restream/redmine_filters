@@ -1,3 +1,17 @@
 en:
+  label_participants: Participants
+  label_updaters: Updaters
+
   field_visit_count: Visits
   field_last_visit_on: Last visit
+
+  field_assigned_to_me_on: Assigned to me on
+  field_unassigned_from_me_on: Unassigned from me on
+  field_updated_after_i_was_assignee_on: Updated after I was assignee
+  field_updated_when_i_was_assignee_on: Updated when I was assignee
+
+  field_created_by_me_on: Created by me on
+  field_updated_by_me_on: Updated by me on
+
+  field_updated_by: Updater (all updaters)
+  field_participant: Participant (author + all assignees)
