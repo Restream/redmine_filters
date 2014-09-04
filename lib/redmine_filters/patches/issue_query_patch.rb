@@ -26,6 +26,7 @@ module RedmineFilters::Patches
       add_available_filter 'assigned_to_me_on', :type => :date_past
       add_available_filter 'unassigned_from_me_on', :type => :date_past
       add_available_filter 'updated_after_i_was_assignee_on', :type => :date_past
+      add_available_filter 'updated_when_i_was_assignee_on', :type => :date_past
 
       # Additional filters based on existing data
       add_available_filter 'created_by_me_on', :type => :date_past
@@ -95,6 +96,32 @@ module RedmineFilters::Patches
                   #{part_t}.user_id = #{User.current.id} AND
                   #{part_t}.date_end IS NOT NULL
               ) AND
+              (#{sql_on_time})
+          )
+        SQL
+      end
+    end
+
+    def sql_for_updated_when_i_was_assignee_on_field(field, operator, value)
+      part_t = IssueParticipant.table_name
+      journal_t = Journal.table_name
+      if value == '!*'
+        '1=0'
+      else
+        sql_on_time = sql_for_field(field, operator, value, journal_t, 'created_on')
+        <<-SQL
+          EXISTS (
+            SELECT * FROM #{journal_t}
+              INNER JOIN #{part_t} ON
+                #{part_t}.issue_id = #{journal_t}.journalized_id AND
+                #{part_t}.user_id = #{User.current.id} AND
+                (
+                  #{part_t}.date_begin <= #{journal_t}.created_on AND
+                  (#{part_t}.date_end IS NULL OR #{part_t}.date_end > #{journal_t}.created_on)
+                )
+            WHERE
+              #{journal_t}.journalized_type = 'Issue' AND
+              #{journal_t}.journalized_id = #{queried_table_name}.id AND
               (#{sql_on_time})
           )
         SQL
