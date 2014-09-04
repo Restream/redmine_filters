@@ -29,6 +29,7 @@ module RedmineFilters::Patches
 
       # Additional filters based on existing data
       add_available_filter 'created_by_me_on', :type => :date_past
+      add_available_filter 'updated_by_me_on', :type => :date_past
     end
 
     def sql_for_visit_count_field(field, operator, value)
@@ -134,6 +135,31 @@ module RedmineFilters::Patches
           sql_for_field('author_id', '=', [User.current.id.to_s], queried_table_name, 'author_id'),
           ')'
       ].join
+    end
+
+    def sql_for_updated_by_me_on_field(field, operator, value)
+      journal_t = Journal.table_name
+      if value == '!*'
+        <<-SQL
+          NOT EXISTS (
+            SELECT * FROM #{journal_t}
+            WHERE
+              #{journal_t}.journalized_type = 'Issue' AND
+              #{journal_t}.journalized_id = #{queried_table_name}.id) AND
+              #{journal_t}.user_id = #{User.current.id}
+        SQL
+      else
+        sql_on_time = sql_for_field(field, operator, value, journal_t, 'created_on')
+        <<-SQL
+          EXISTS (
+            SELECT * FROM #{journal_t}
+            WHERE
+              #{journal_t}.journalized_type = 'Issue' AND
+              #{journal_t}.journalized_id = #{Issue.table_name}.id AND
+              #{journal_t}.user_id = #{User.current.id} AND
+              (#{sql_on_time}))
+        SQL
+      end
     end
   end
 end
