@@ -28,9 +28,38 @@ module RedmineFilters::Patches
       add_available_filter 'updated_after_i_was_assignee_on', :type => :date_past
       add_available_filter 'updated_when_i_was_assignee_on', :type => :date_past
 
+      principals = available_principals
+      users = principals.select { |p| p.is_a?(User) }
+
+      assigned_to_values = []
+      assigned_to_values << ["<< #{l(:label_me)} >>", 'me'] if User.current.logged?
+      assigned_to_values += (Setting.issue_group_assignment? ? principals : users).collect{ |s| [s.name, s.id.to_s] }
+
+      add_available_filter(
+          'updated_by', :type => :list_optional, :values => assigned_to_values
+      ) unless assigned_to_values.empty?
+
       # Additional filters based on existing data
       add_available_filter 'created_by_me_on', :type => :date_past
       add_available_filter 'updated_by_me_on', :type => :date_past
+    end
+
+    def available_principals
+      principals = []
+      if project
+        principals += project.principals.sort
+        unless project.leaf?
+          subprojects = project.descendants.visible.all
+          principals += Principal.member_of(subprojects)
+        end
+      else
+        if all_projects.any?
+          principals += Principal.member_of(all_projects)
+        end
+      end
+      principals.uniq!
+      principals.sort!
+      principals
     end
 
     def sql_for_visit_count_field(field, operator, value)
@@ -187,6 +216,23 @@ module RedmineFilters::Patches
               (#{sql_on_time}))
         SQL
       end
+    end
+
+    def sql_for_updated_by_field(field, operator, value)
+      value.push(User.current.logged? ? User.current.id.to_s : '0') if value.delete('me')
+      Group.all.each do |group|
+        value += group.users.map { |u| u.id.to_s } if value.delete(group.id.to_s)
+      end
+      journal_t = Journal.table_name
+      sql_user_id = sql_for_field(field, operator, value, journal_t, 'user_id')
+      <<-SQL
+        EXISTS (
+          SELECT * FROM #{journal_t}
+          WHERE
+            #{journal_t}.journalized_type = 'Issue' AND
+            #{journal_t}.journalized_id = #{Issue.table_name}.id AND
+            (#{sql_user_id}))
+      SQL
     end
   end
 end

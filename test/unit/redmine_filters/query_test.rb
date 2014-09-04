@@ -228,4 +228,42 @@ class RedmineFilters::QueryTest < ActiveSupport::TestCase
     query = IssueQuery.new
     assert query.available_columns.detect { |c| c.name == :last_visit_on }
   end
+
+  def test_updated_by_user_1
+    query = IssueQuery.new(:name => '_')
+    query.add_filter('updated_by', '=', ['1'])
+    assert query.has_filter?('updated_by')
+    assert_equal [1, 6], query.issue_ids.sort
+  end
+
+  def test_updated_by_user_2
+    query = IssueQuery.new(:name => '_')
+    query.add_filter('updated_by', '=', ['2'])
+    assert query.has_filter?('updated_by')
+    assert_equal [1, 2, 14], query.issue_ids.sort
+  end
+
+  def test_updated_by_me
+    User.current = User.find(2)
+    query = IssueQuery.new(:name => '_')
+    query.add_filter('updated_by', '=', ['me'])
+    assert query.has_filter?('updated_by')
+    assert_equal [1, 2, 14], query.issue_ids.sort
+  end
+
+  def test_updated_by_user_3
+    query = IssueQuery.new(:name => '_')
+    query.add_filter('updated_by', '=', ['3'])
+    assert query.has_filter?('updated_by')
+    assert_equal 0, query.issue_count
+  end
+
+  def test_updated_by_group
+    group = Group.find(10)
+    group.users << User.find(1)
+    query = IssueQuery.new(:name => '_')
+    query.add_filter('updated_by', '=', ['10'])
+    assert query.has_filter?('updated_by')
+    assert_equal [1, 6], query.issue_ids.sort
+  end
 end
