@@ -8,3 +8,7 @@ ul.updaters, ul.participants {
   margin: 0px 2px 0px 0px;
   padding: 0px 0px 0px 0px;
 }
+
+.participants img.gravatar, .updaters img.gravatar {
+  margin: 0 4px 2px 0;
+}
