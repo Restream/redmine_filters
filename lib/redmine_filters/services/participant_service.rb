@@ -2,16 +2,16 @@ module RedmineFilters::Services
   class ParticipantService
     class << self
       def update_assignees(&block)
-        IssueParticipant.delete_all(:participant_role => IssueParticipant::ASSIGNEE)
+        IssueParticipant.delete_all(participant_role: IssueParticipant::ASSIGNEE)
         update_assignees_by_issue(&block)
         update_assignees_by_journal(&block)
       end
 
       def estimated_ticks
         journal_details = JournalDetail.joins(:journal).where(
-            :property => 'attr',
-            :prop_key => 'assigned_to_id',
-            'journals.journalized_type' => 'Issue').count
+          property:                   'attr',
+          prop_key:                   'assigned_to_id',
+          'journals.journalized_type' => 'Issue').count
 
         # for read and insert
         journal_details * 2
@@ -42,34 +42,34 @@ module RedmineFilters::Services
 
       def update_assignees_by_journal(&block)
         issues = {}
-        JournalDetail\
+        details = JournalDetail\
           .select('journal_details.id, issues.id as issue_id, issues.created_on, journals.created_on as updated_on, journal_details.old_value, journal_details.value')\
-          .joins(:journal => [:issue])\
-          .where(:property => 'attr', :prop_key => 'assigned_to_id', 'journals.journalized_type' => 'Issue')\
-          .find_each do |detail|
+          .joins(journal: [:issue])\
+          .where(property: 'attr', prop_key: 'assigned_to_id', 'journals.journalized_type' => 'Issue')
+        details.find_each do |detail|
 
           issues[detail.issue_id] ||= []
-          issue = issues[detail.issue_id]
+          issue                   = issues[detail.issue_id]
 
           if issue.empty?
             # first change of assignee
 
             # first assignee
             issue << {
-                :issue_id => detail.issue_id,
-                :user_id => detail.old_value && detail.old_value.to_i,
-                :participant_role => IssueParticipant::ASSIGNEE,
-                :date_begin => detail.created_on,
-                :date_end => detail.updated_on
+              issue_id:         detail.issue_id,
+              user_id:          detail.old_value && detail.old_value.to_i,
+              participant_role: IssueParticipant::ASSIGNEE,
+              date_begin:       detail.created_on,
+              date_end:         detail.updated_on
             }
 
             # second assignee
             issue << {
-                :issue_id => detail.issue_id,
-                :user_id => detail.value && detail.value.to_i,
-                :participant_role => IssueParticipant::ASSIGNEE,
-                :date_begin => detail.updated_on,
-                :date_end => nil
+              issue_id:         detail.issue_id,
+              user_id:          detail.value && detail.value.to_i,
+              participant_role: IssueParticipant::ASSIGNEE,
+              date_begin:       detail.updated_on,
+              date_end:         nil
             }
 
           else
@@ -80,11 +80,11 @@ module RedmineFilters::Services
 
             # next assignee
             issue << {
-                :issue_id => detail.issue_id,
-                :user_id => detail.value && detail.value.to_i,
-                :participant_role => IssueParticipant::ASSIGNEE,
-                :date_begin => detail.updated_on,
-                :date_end => nil
+              issue_id:         detail.issue_id,
+              user_id:          detail.value && detail.value.to_i,
+              participant_role: IssueParticipant::ASSIGNEE,
+              date_begin:       detail.updated_on,
+              date_end:         nil
             }
           end
           block.call(1) if block_given?

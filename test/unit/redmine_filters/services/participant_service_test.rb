@@ -1,13 +1,13 @@
 require File.expand_path('../../../../test_helper', __FILE__)
 
 class RedmineFilters::Services::ParticipantServiceTest < ActiveSupport::TestCase
-  fixtures :users, :user_preferences, :roles, :projects, :members, :member_roles,
+  fixtures :users, :user_preferences, :roles, :projects, :members, :member_roles, :email_addresses,
            :issues, :issue_statuses, :trackers, :enumerations, :custom_fields,
            :auth_sources, :projects_trackers, :enabled_modules, :journals, :journal_details
 
   def test_update_assignees_by_issue
     RedmineFilters::Services::ParticipantService.send :update_assignees_by_issue
-    issues_count = Issue.count
+    issues_count       = Issue.count
     participants_count = IssueParticipant.assignees.count
     assert_equal issues_count, participants_count
     Issue.all.each do |issue|

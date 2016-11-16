@@ -4,13 +4,13 @@ module RedmineFilters::Patches
 
     included do
       self.available_columns << QueryColumn.new(
-          :visit_count,
-          :sortable => "COALESCE(#{IssueVisit.table_name}.visit_count, 0)",
-          :default_order => 'desc')
+        :visit_count,
+        sortable:      "COALESCE(#{IssueVisit.table_name}.visit_count, 0)",
+        default_order: 'desc')
       self.available_columns << QueryColumn.new(
-          :last_visit_on,
-          :sortable => "COALESCE(#{IssueVisit.table_name}.last_visit_on, date('1900-01-01'))",
-          :default_order => 'desc')
+        :last_visit_on,
+        sortable:      "COALESCE(#{IssueVisit.table_name}.last_visit_on, date('1900-01-01'))",
+        default_order: 'desc')
 
       alias_method_chain :initialize_available_filters, :rfs_patch
     end
@@ -18,28 +18,28 @@ module RedmineFilters::Patches
     def initialize_available_filters_with_rfs_patch
       initialize_available_filters_without_rfs_patch
 
-      principals = available_principals
+      principals       = available_principals
       principal_values = []
       principal_values << ["<< #{l(:label_me)} >>", 'me'] if User.current.logged?
-      principal_values += principals.collect{ |s| [s.name, s.id.to_s] }
+      principal_values += principals.collect { |s| [s.name, s.id.to_s] }
 
       # Filters based on issue_visit
-      add_available_filter 'visit_count', :type => :integer
-      add_available_filter 'last_visit_on', :type => :date_past
+      add_available_filter 'visit_count', type: :integer
+      add_available_filter 'last_visit_on', type: :date_past
 
       # Filters based on issue_participant
-      add_available_filter 'assigned_to_me_on', :type => :date_past
-      add_available_filter 'unassigned_from_me_on', :type => :date_past
-      add_available_filter 'updated_after_i_was_assignee_on', :type => :date_past
-      add_available_filter 'updated_when_i_was_assignee_on', :type => :date_past
+      add_available_filter 'assigned_to_me_on', type: :date_past
+      add_available_filter 'unassigned_from_me_on', type: :date_past
+      add_available_filter 'updated_after_i_was_assignee_on', type: :date_past
+      add_available_filter 'updated_when_i_was_assignee_on', type: :date_past
 
       # Additional filters based on existing data
-      add_available_filter 'created_by_me_on', :type => :date_past
-      add_available_filter 'updated_by_me_on', :type => :date_past
+      add_available_filter 'created_by_me_on', type: :date_past
+      add_available_filter 'updated_by_me_on', type: :date_past
 
       if principal_values.any?
-        add_available_filter 'updated_by', :type => :list_optional, :values => principal_values
-        add_available_filter 'participant', :type => :list_optional, :values => principal_values
+        add_available_filter 'updated_by', type: :list_optional, values: principal_values
+        add_available_filter 'participant', type: :list_optional, values: principal_values
       end
     end
 
@@ -49,7 +49,7 @@ module RedmineFilters::Patches
         principals += project.principals.sort
         unless project.leaf?
           subprojects = project.descendants.visible.all
-          principals += Principal.member_of(subprojects)
+          principals  += Principal.member_of(subprojects)
         end
       else
         if all_projects.any?
@@ -95,7 +95,7 @@ module RedmineFilters::Patches
     end
 
     def sql_for_updated_after_i_was_assignee_on_field(field, operator, value)
-      part_t = IssueParticipant.table_name
+      part_t    = IssueParticipant.table_name
       journal_t = Journal.table_name
       if value == '!*'
         '1=0'
@@ -131,7 +131,7 @@ module RedmineFilters::Patches
     end
 
     def sql_for_updated_when_i_was_assignee_on_field(field, operator, value)
-      part_t = IssueParticipant.table_name
+      part_t    = IssueParticipant.table_name
       journal_t = Journal.table_name
       if value == '!*'
         '1=0'
@@ -184,11 +184,11 @@ module RedmineFilters::Patches
 
     def sql_for_created_by_me_on_field(field, operator, value)
       [
-          '(',
-          sql_for_field('created_on', operator, value, queried_table_name, 'created_on'),
-          ' AND ',
-          sql_for_field('author_id', '=', [User.current.id.to_s], queried_table_name, 'author_id'),
-          ')'
+        '(',
+        sql_for_field('created_on', operator, value, queried_table_name, 'created_on'),
+        ' AND ',
+        sql_for_field('author_id', '=', [User.current.id.to_s], queried_table_name, 'author_id'),
+        ')'
       ].join
     end
 
@@ -219,8 +219,8 @@ module RedmineFilters::Patches
 
     def sql_for_updated_by_field(field, operator, value)
       replace_keyword_me_with_current_user_id(value)
-      value = replace_group_id_with_user_ids(value)
-      journal_t = Journal.table_name
+      value       = replace_group_id_with_user_ids(value)
+      journal_t   = Journal.table_name
       sql_user_id = sql_for_field(field, operator, value, journal_t, 'user_id')
       <<-SQL
         EXISTS (
@@ -234,8 +234,8 @@ module RedmineFilters::Patches
 
     def sql_for_participant_field(field, operator, value)
       replace_keyword_me_with_current_user_id(value)
-      value = replace_group_id_with_user_ids(value)
-      part_t = IssueParticipant.table_name
+      value       = replace_group_id_with_user_ids(value)
+      part_t      = IssueParticipant.table_name
       sql_user_id = sql_for_field(field, operator, value, part_t, 'user_id')
       <<-SQL
         EXISTS (
@@ -255,8 +255,4 @@ module RedmineFilters::Patches
       value.push(User.current.logged? ? User.current.id.to_s : '0') if value.delete('me')
     end
   end
-end
-
-unless IssueQuery.included_modules.include? RedmineFilters::Patches::IssueQueryPatch
-  IssueQuery.send :include, RedmineFilters::Patches::IssueQueryPatch
 end

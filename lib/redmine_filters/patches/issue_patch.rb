@@ -3,19 +3,19 @@ module RedmineFilters::Patches
     extend ActiveSupport::Concern
 
     included do
-      has_many :participants, :class_name => 'IssueParticipant'
+      has_many :participants, class_name: 'IssueParticipant'
 
       has_one :visit,
-              :class_name => 'IssueVisit',
-              :conditions => proc { "#{IssueVisit.table_name}.user_id = #{User.current.id}" }
+              -> { where("#{IssueVisit.table_name}.user_id = #{User.current.id}") },
+              class_name: 'IssueVisit'
 
-      delegate :visit_count, :last_visit_on, :to => :visit, :allow_nil => true
+      delegate :visit_count, :last_visit_on, to: :visit, allow_nil: true
 
-      scope :visible, lambda {|*args|
-        includes(:project, :visit).where(Issue.visible_condition(args.shift || User.current, *args))
+      scope :visible, lambda { |*args|
+        joins(:project).includes(:project, :visit).where(Issue.visible_condition(args.shift || User.current, *args))
       }
 
-      after_commit :insert_assignee_into_participants, :on => :create
+      after_commit :insert_assignee_into_participants, on: :create
     end
 
     def author_with_participants
@@ -32,10 +32,10 @@ module RedmineFilters::Patches
 
     def insert_assignee_into_participants
       IssueParticipant.create(
-          :issue => self,
-          :user => assigned_to,
-          :participant_role => IssueParticipant::ASSIGNEE,
-          :date_begin => created_on
+        issue:            self,
+        user:             assigned_to,
+        participant_role: IssueParticipant::ASSIGNEE,
+        date_begin:       created_on
       )
     end
   end

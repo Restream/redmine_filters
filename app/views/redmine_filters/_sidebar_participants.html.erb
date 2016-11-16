@@ -1,15 +1,15 @@
 <% if @issue %>
-<h3><%= l(:label_participants) %></h3>
-<ul class="participants">
-  <% @issue.author_with_participants.each do |participant| %>
-  <li><%= avatar(participant, :size => '16').to_s %><%= link_to_user(participant, :class => 'user') %></li>
-  <% end %>
-</ul>
+    <h3><%= l(:label_participants) %></h3>
+    <ul class="participants">
+      <% @issue.author_with_participants.each do |participant| %>
+          <li><%= avatar(participant, size: '16').to_s %><%= link_to_user(participant, class: 'user') %></li>
+      <% end %>
+    </ul>
 
-<h3><%= l(:label_updaters) %></h3>
-<ul class="updaters">
-  <% @issue.author_with_updaters.each do |updater| %>
-    <li><%= avatar(updater, :size => '16').to_s %><%= link_to_user(updater, :class => 'user') %></li>
-  <% end %>
-</ul>
+    <h3><%= l(:label_updaters) %></h3>
+    <ul class="updaters">
+      <% @issue.author_with_updaters.each do |updater| %>
+          <li><%= avatar(updater, size: '16').to_s %><%= link_to_user(updater, class: 'user') %></li>
+      <% end %>
+    </ul>
 <% end %>
