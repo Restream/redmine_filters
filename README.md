@@ -1,5 +1,7 @@
 # Redmine Filters
 
+[![Build Status](https://travis-ci.org/Restream/redmine_filters.svg?branch=master)](https://travis-ci.org/Restream/redmine_filters)
+
 This plugin adds new filters to search through history (issue participants, issue visits)
 
 ## Description
