@@ -1,0 +1,17 @@
+zh:
+  label_participants: 参与人
+  label_updaters: 更新人
+
+  field_visit_count: 访问人数
+  field_last_visit_on: 最后访问日期
+
+  field_assigned_to_me_on: 分配给我的时间范围
+  field_unassigned_from_me_on: 从分配给我转分配给其他人的时间范围
+  field_updated_after_i_was_assignee_on: 更新于（当我曾是被指派人）
+  field_updated_when_i_was_assignee_on: 更新于（当我是被指派人）
+
+  field_created_by_me_on: 由我创建的时间范围
+  field_updated_by_me_on: 由我更新的时间范围
+
+  field_updated_by: 更新人（所有更新人）
+  field_participant: 参与人（作者+分配过的人员）
