@@ -3,7 +3,7 @@ class IssueParticipant < ActiveRecord::Base
   WATCHER  = 1
 
   belongs_to :issue
-  belongs_to :user
+  belongs_to :user, class_name: 'Principal'
 
   scope :assignees, lambda { where(participant_role: ASSIGNEE).order(:date_begin) }
 

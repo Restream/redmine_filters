@@ -219,7 +219,7 @@ module RedmineFilters::Patches
 
     def sql_for_updated_by_field(field, operator, value)
       replace_keyword_me_with_current_user_id(value)
-      value       = replace_group_id_with_user_ids(value)
+      value       = extend_group_id_with_user_ids(value)
       journal_t   = Journal.table_name
       sql_user_id = sql_for_field(field, operator, value, journal_t, 'user_id')
       <<-SQL
@@ -234,7 +234,7 @@ module RedmineFilters::Patches
 
     def sql_for_participant_field(field, operator, value)
       replace_keyword_me_with_current_user_id(value)
-      value       = replace_group_id_with_user_ids(value)
+      value       = extend_group_id_with_user_ids(value)
       part_t      = IssueParticipant.table_name
       sql_user_id = sql_for_field(field, operator, value, part_t, 'user_id')
       <<-SQL
@@ -244,9 +244,9 @@ module RedmineFilters::Patches
       SQL
     end
 
-    def replace_group_id_with_user_ids(value)
+    def extend_group_id_with_user_ids(value)
       Group.all.each do |group|
-        value += group.users.map { |u| u.id.to_s } if value.delete(group.id.to_s)
+        value += group.users.map { |u| u.id.to_s } if value.include?(group.id.to_s)
       end
       value
     end

@@ -66,6 +66,29 @@ class RedmineFilters::IssuesControllerTest < ActionController::TestCase
     assert_equal nil, participant.date_end
   end
 
+  def test_participant_created_on_issue_create_with_group_assignee
+    with_settings :issue_group_assignment => '1' do
+      @request.session[:user_id] = 1
+      post :create, project_id: 2,
+           issue:               { tracker_id:      1,
+                                  status_id:       2,
+                                  assigned_to_id:  11,
+                                  subject:         'This is the test_new issue assigned to group',
+                                  description:     'This is the description',
+                                  priority_id:     5,
+                                  start_date:      '2010-11-07',
+                                  estimated_hours: '' }
+
+      issue        = Issue.find_by_subject('This is the test_new issue assigned to group')
+      participants = issue.participants
+      assert_equal 1, participants.count
+      participant = participants[0]
+      assert_equal 11, participant.user_id
+      assert_equal issue.created_on, participant.date_begin
+      assert_equal nil, participant.date_end
+    end
+  end
+
   def test_participant_created_on_issue_create_without_assignee
     @request.session[:user_id] = 2
     post :create, project_id: 1,
